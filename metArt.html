@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://d3js.org/d3.v4.min.js" crossorigin="anonymous"></script> 
+
+
+        <title></title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        <style>
+            html,body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            }
+            .fullscreen {
+            display: block;
+            width: 100%;
+            height: 100vh;
+            object-fit: contain;
+            object-position: middle;
+            }
+        </style>
+        <script>
+            var qry = "moon";
+            var ttl = 0;
+            var lst = [];
+            var duration = 60;
+
+            function getList(q){
+                qryUrl = "https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q="+q
+                d3.json(qryUrl, function (d) { 
+                    console.log(d.objectIDs);
+                    ttl = d.total;
+                    lst = d.objectIDs;
+
+                    pickGood();
+                });
+            } 
+
+            function getImage(num){
+                d3.json("https://collectionapi.metmuseum.org/public/collection/v1/objects/"+num, function (d) { 
+                    return d.primaryImage;
+                }); 
+            }
+
+            function pickGood(){
+                n = lst[(Math.floor(Math.random() * lst.length))];
+                console.log('artnum ', n);
+                d3.json("https://collectionapi.metmuseum.org/public/collection/v1/objects/"+n, function (d) { 
+                    u = d.primaryImage;
+                    console.log('get url ', u);
+                    if (u !== ""){
+                        document.getElementById("art").src = u;
+                        setTimeout(pickGood, 600000)
+                    } else {
+                        setTimeout(pickGood, 5000)
+                    }
+                }); 
+            }
+                
+
+  
+        </script> 
+    </head>
+    <body>
+
+        <img id= "art" class="fullscreen" src="" />
+
+
+        <script>
+            image = document.getElementById("art")
+            image.crossOrigin = "anonymous";
+            image.alt = "Met Art Display";
+
+            getList(qry);
+
+        </script> 
+    </body>
+</html>
+
+
