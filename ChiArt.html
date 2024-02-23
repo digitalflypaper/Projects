@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://d3js.org/d3.v4.min.js" crossorigin="anonymous"></script> 
+
+
+        <title></title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet'>
+
+        <style>
+            html,body {
+                margin: 0;
+                padding: 0;
+                background: black;
+                font-family: 'Lato';font-size: 22px;
+            }
+            .fullscreen {
+                display: block;
+                width: 100%;
+                height: 100vh;
+                object-fit: contain;
+                object-position: middle;
+            }
+            .container {
+                position: relative;
+            }
+            .container .content {
+                position: absolute; /* Position the background text */
+                bottom: 0; /* At the bottom. Use top:0 to append it to the top */
+                background: rgb(0, 0, 0); /* Fallback color */
+                background: rgba(0, 0, 0, 0.6); /* Black background with 0.6 opacity */
+                color: #f1f1f1; /* Grey text */
+                width: 100%; /* Full width */
+                padding: 10px; /* Some padding */
+            }
+        </style>
+        <script>
+            var qry = "African American";
+            var qryUrl = ""
+            var ttl = 0;
+            var lst = [];
+            var pages = 0;
+            var items = 0;
+            var current_page = 0;
+            var duration = 60;
+            var pageLimit = 5;
+
+            function getList(q){
+                srchStr = encodeURI(qry);
+                qryUrl = "https://api.artic.edu/api/v1/artworks/search?q="+srchStr+"&query[term][is_public_domain]=true&fields=id&limit=100"
+                d3.json(qryUrl, function (d) { 
+                    var pag = d.pagination;
+                    items = pag.total;
+                    pages = pag.total_pages;
+                    current_page = pag.current_page;
+                    lst = d.data;
+                    if (current_page < pages && current_page < pageLimit){
+                        getMorePages();
+                    }
+                });
+            } 
+
+            function getMorePages(){
+                this_page = current_page + 1
+                d3.json(qryUrl+"&page="+this_page, function (d) { 
+                    var pag = d.pagination;
+                    items = pag.total;
+                    pages = pag.total_pages;
+                    current_page = pag.current_page;
+                    lst.push.apply(lst, d.data);
+
+                    if (current_page < pages && current_page < pageLimit){
+                        getMorePages();
+                    } else {
+                        pickGood();
+                    }
+                });
+            } 
+
+
+            function pickGood(){
+                n = lst[(Math.floor(Math.random() * lst.length))];
+                var thisUrl = "https://api.artic.edu/api/v1/artworks/"+n.id+"?fields=id,title,image_id,alt_text,date_display,artist_display,place_of_origin"
+                d3.json(thisUrl, function (d) { 
+                    var thisdata = d.data;
+                    var title  = thisdata.title;
+                    var alt = thisdata.alt_text;
+                    var date_display = thisdata.date_display;
+                    var artist = thisdata.artist_display;
+                    var place = thisdata.place_of_origin;
+                    var image_id = thisdata.image_id;
+                    var u = "https://www.artic.edu/iiif/2/"+image_id+"/full/843,/0/default.jpg"
+                    if (u !== ""){
+                        document.getElementById("art").src = u;
+                        document.getElementById("title").innerHTML = title;
+                        document.getElementById("artist").innerHTML = artist+"<br/>"+date_display +" - "+place;
+                        //console.log(title, artist, date_display, place)
+                        setTimeout(pickGood, 300000)
+                    } else {
+                        setTimeout(pickGood, 5000)
+                        //console.log ("retrying", u)
+                    }
+                }); 
+            }
+                
+
+  
+        </script> 
+    </head>
+    <body>
+        <div class="container">
+            <img id= "art" class="fullscreen" src="" />
+            <div class="content">
+                <h2 id="title">Heading</h2>
+                <p id="artist">Lorem ipsum..</p>
+              </div>
+        </div>
+
+
+        <script>
+
+            getList(qry);
+
+
+        </script> 
+    </body>
+</html>
+
+
